@@ -1,0 +1,285 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+}
+
+enum AccountStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum RegistrationMode {
+  INVITE_ONLY
+  SELF_REGISTER
+  SELF_REGISTER_AUTO
+}
+
+model User {
+  id            String        @id @default(cuid())
+  email         String        @unique
+  password      String
+  role          Role          @default(MANAGER)
+  accountStatus AccountStatus @default(PENDING)
+
+  firstName            String?
+  lastName             String?
+  displayName          String?
+  avatarUrl            String?
+  phone                String?
+  verificationCode     String?
+  verificationExpires  DateTime?
+  passwordResetToken   String?
+  passwordResetExpires DateTime?
+  lastActiveAt         DateTime?
+
+  city        String?
+  country     String?
+  language    String?
+  dateOfBirth DateTime?
+
+  googleId           String?   @unique
+  googleRefreshToken String?
+
+  invitedById String?
+  invitedBy   User?   @relation("UserInvites", fields: [invitedById], references: [id])
+  invitees    User[]  @relation("UserInvites")
+  auditLogs     AuditLog[]
+  notifications Notification[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+  @@index([role])
+  @@index([googleId])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action    String
+  meta      Json?
+  ip        String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  body      String
+  read      Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([userId, read])
+}
+
+model SystemSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ─── SCHOOL CONTENT ─────────────────────────────────────────────────────────────
+// Single-tenant: one school, one site. School is always exactly one row —
+// this is the live source for both the public site and the admin dashboard's
+// own branding (logo, name, colors), replacing the old SCHOOL constant.
+
+enum SchoolType {
+  PRIMARY
+  HIGH
+}
+
+enum PostType {
+  NEWS
+  BLOG
+}
+
+model School {
+  id String @id @default("singleton")
+
+  schoolName  String @default("Your School Name")
+  type        SchoolType @default(HIGH)
+  motto       String @default("Your school motto here")
+  accentColor String @default("#C2542E")
+  accentSoft  String @default("#E8D9C3")
+  logoUrl     String?
+  heroPhoto   String?
+
+  address String @default("")
+  phone   String @default("")
+  email   String @default("")
+
+  principalName    String  @default("")
+  principalPhoto   String?
+  principalMessage String  @default("")
+
+  province        String @default("")
+  passRate        Int    @default(0)
+  learnerCount     Int    @default(0)
+  yearEstablished  Int    @default(2000)
+  ratio            String @default("1:30")
+
+  features        Json?
+
+  socialFacebook  String?
+  socialTwitter   String?
+  socialYoutube   String?
+
+  footerBio       String?
+
+  ctaTitle        String?
+  ctaBody         String?
+  ctaBullets      Json?
+
+  // About page
+  aboutSubtitle     String?
+  aboutHistory      Json?
+  aboutHistoryImage String?
+  mission           String?
+  vision            String?
+  sgbBody           Json?
+  awards            Json?
+
+  // Academics page
+  academicStreams   Json?
+  academicSupport  Json?
+
+  // Admissions page
+  admissionsDocs      Json?
+  admissionsFees      Json?
+  admissionsFeeNote   String?
+  admissionsFAQ       Json?
+  admissionsKeyDates  Json?
+
+  // Student Life page
+  studentActivities Json?
+  calendarEvents    Json?
+
+  // Resources page
+  resourceLinks    Json?
+  parentPortalUrl  String?
+
+  // Contact page
+  officeHours      String?
+  contactSubjects  Json?
+
+  // News page
+  newsletters      Json?
+
+  staff        StaffMember[]
+  posts        Post[]
+  testimonials Testimonial[]
+  termDates    TermDate[]
+  photos       GalleryPhoto[]
+
+  updatedAt DateTime @updatedAt
+}
+
+model StaffMember {
+  id        String  @id @default(cuid())
+  schoolId  String  @default("singleton")
+  school    School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  name      String
+  role      String
+  subject   String?
+  photo     String?
+  sortOrder Int     @default(0)
+
+  @@index([schoolId, sortOrder])
+}
+
+// News & Blog share this model (same shape, different audience/voice) — the
+// `type` field drives which public section a post shows up in. Blog should
+// only appear in the public nav once at least one BLOG-type post exists.
+model Post {
+  id        String   @id @default(cuid())
+  schoolId  String   @default("singleton")
+  school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  type      PostType @default(NEWS)
+  title     String
+  slug      String   @unique
+  date      DateTime @default(now())
+  category  String?
+  excerpt   String
+  body      String?
+  image     String?
+  published Boolean  @default(true)
+  sortOrder Int      @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([schoolId, type, published])
+  @@index([slug])
+}
+
+model Testimonial {
+  id        String @id @default(cuid())
+  schoolId  String @default("singleton")
+  school    School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  quote     String
+  author    String
+  role      String
+  sortOrder Int    @default(0)
+
+  @@index([schoolId, sortOrder])
+}
+
+model TermDate {
+  id        String   @id @default(cuid())
+  schoolId  String   @default("singleton")
+  school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  term      String
+  start     DateTime
+  end       DateTime
+  sortOrder Int      @default(0)
+
+  @@index([schoolId, sortOrder])
+}
+
+model GalleryPhoto {
+  id        String  @id @default(cuid())
+  schoolId  String  @default("singleton")
+  school    School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  url       String
+  caption   String?
+  sortOrder Int     @default(0)
+
+  @@index([schoolId, sortOrder])
+}
+
+// ─── ANALYTICS ──────────────────────────────────────────────────────────────────
+// Lightweight self-hosted pageview log — not full analytics (no unique-visitor
+// dedup, no device/referrer breakdown beyond raw referrer string).
+
+model PageView {
+  id        String   @id @default(cuid())
+  path      String
+  referrer  String?
+  createdAt DateTime @default(now())
+
+  @@index([path])
+  @@index([createdAt])
+}
