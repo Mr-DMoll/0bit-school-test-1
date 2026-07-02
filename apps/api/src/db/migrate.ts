@@ -178,6 +178,41 @@ if (!connectionString) {
       );
     `);
 
+    // ── School page-content columns ───────────────────────────────────────────
+    // Added to schema.prisma after the CREATE TABLE above was first written —
+    // this file is hand-maintained raw SQL, not generated from the schema, so
+    // it drifted. All nullable, so plain ADD COLUMN IF NOT EXISTS is safe on
+    // both fresh and already-bootstrapped databases.
+    await client.query(`ALTER TABLE "School" ADD COLUMN IF NOT EXISTS "features"           JSONB;`);
+    await client.query(`ALTER TABLE "School" ADD COLUMN IF NOT EXISTS "socialFacebook"      TEXT;`);
+    await client.query(`ALTER TABLE "School" ADD COLUMN IF NOT EXISTS "socialTwitter"       TEXT;`);
+    await client.query(`ALTER TABLE "School" ADD COLUMN IF NOT EXISTS "socialYoutube"       TEXT;`);
+    await client.query(`ALTER TABLE "School" ADD COLUMN IF NOT EXISTS "footerBio"           TEXT;`);
+    await client.query(`ALTER TABLE "School" ADD COLUMN IF NOT EXISTS "ctaTitle"            TEXT;`);
+    await client.query(`ALTER TABLE "School" ADD COLUMN IF NOT EXISTS "ctaBody"             TEXT;`);
+    await client.query(`ALTER TABLE "School" ADD COLUMN IF NOT EXISTS "ctaBullets"          JSONB;`);
+    await client.query(`ALTER TABLE "School" ADD COLUMN IF NOT EXISTS "aboutSubtitle"       TEXT;`);
+    await client.query(`ALTER TABLE "School" ADD COLUMN IF NOT EXISTS "aboutHistory"        JSONB;`);
+    await client.query(`ALTER TABLE "School" ADD COLUMN IF NOT EXISTS "aboutHistoryImage"   TEXT;`);
+    await client.query(`ALTER TABLE "School" ADD COLUMN IF NOT EXISTS "mission"             TEXT;`);
+    await client.query(`ALTER TABLE "School" ADD COLUMN IF NOT EXISTS "vision"              TEXT;`);
+    await client.query(`ALTER TABLE "School" ADD COLUMN IF NOT EXISTS "sgbBody"             JSONB;`);
+    await client.query(`ALTER TABLE "School" ADD COLUMN IF NOT EXISTS "awards"              JSONB;`);
+    await client.query(`ALTER TABLE "School" ADD COLUMN IF NOT EXISTS "academicStreams"     JSONB;`);
+    await client.query(`ALTER TABLE "School" ADD COLUMN IF NOT EXISTS "academicSupport"     JSONB;`);
+    await client.query(`ALTER TABLE "School" ADD COLUMN IF NOT EXISTS "admissionsDocs"      JSONB;`);
+    await client.query(`ALTER TABLE "School" ADD COLUMN IF NOT EXISTS "admissionsFees"      JSONB;`);
+    await client.query(`ALTER TABLE "School" ADD COLUMN IF NOT EXISTS "admissionsFeeNote"   TEXT;`);
+    await client.query(`ALTER TABLE "School" ADD COLUMN IF NOT EXISTS "admissionsFAQ"       JSONB;`);
+    await client.query(`ALTER TABLE "School" ADD COLUMN IF NOT EXISTS "admissionsKeyDates"  JSONB;`);
+    await client.query(`ALTER TABLE "School" ADD COLUMN IF NOT EXISTS "studentActivities"   JSONB;`);
+    await client.query(`ALTER TABLE "School" ADD COLUMN IF NOT EXISTS "calendarEvents"      JSONB;`);
+    await client.query(`ALTER TABLE "School" ADD COLUMN IF NOT EXISTS "resourceLinks"       JSONB;`);
+    await client.query(`ALTER TABLE "School" ADD COLUMN IF NOT EXISTS "parentPortalUrl"     TEXT;`);
+    await client.query(`ALTER TABLE "School" ADD COLUMN IF NOT EXISTS "officeHours"         TEXT;`);
+    await client.query(`ALTER TABLE "School" ADD COLUMN IF NOT EXISTS "contactSubjects"     JSONB;`);
+    await client.query(`ALTER TABLE "School" ADD COLUMN IF NOT EXISTS "newsletters"         JSONB;`);
+
     await client.query(`
       CREATE TABLE IF NOT EXISTS "StaffMember" (
         "id"        TEXT NOT NULL,
